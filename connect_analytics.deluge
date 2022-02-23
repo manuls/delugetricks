@@ -1,3 +1,8 @@
+/* 
+Lines of code to retrieve info from a Zoho Analytics Report
+The .EU domain is for Europe servers, it can be changed for the appropiate domain 
+*/
+
 organizationID = "XXXX";
 workspaceID = "XXXXX";
 reportID = "xxxx"; 
@@ -13,6 +18,7 @@ getInfoAna = invokeurl
 	type :GET
 	parameters:paramsMap
 	headers:headersMap
+	//Nmae of the connection configured in Analytics
 	connection:"analytics"
 ];
 empList = getInfoAna.get("data");
