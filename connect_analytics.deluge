@@ -1,0 +1,18 @@
+organizationID = "XXXX";
+workspaceID = "XXXXX";
+reportID = "xxxx"; 
+headersMap = Map();
+headersMap.put("ZANALYTICS-ORGID",organizationID);
+config = Map();
+config.put("responseFormat","json");
+paramsMap = Map();
+paramsMap.put("CONFIG",config.toString());
+getInfoAna = invokeurl
+[
+	url :"https://analyticsapi.zoho.eu/restapi/v2/workspaces/" + workspaceID + "/views/" + reportID + "/data"
+	type :GET
+	parameters:paramsMap
+	headers:headersMap
+	connection:"analytics"
+];
+empList = getInfoAna.get("data");
