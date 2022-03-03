@@ -1,0 +1,20 @@
+/* 
+How to get records from a customm view ID in Zoho CRM
+Made with Deluge inside own Zoho CRM editor
+*/
+//Name of the module where we want to search
+//Accounts for example. It works with custom modules too
+modulename = "Accounts";
+//ID of the custom view
+custVID = "xxxx";
+// getRecords has a maxium of 200 items per page, so pagination is mandatory if you have more than that
+pages = {1, 2, 3, 4};
+for each p in pages {
+lista = zoho.crm.getRecords(modulename, p, 200, { "cvid": custVID });
+for each cuenta in lista {
+	accID = cuenta.get("id"); 
+ //Do what you want with the records here 
+}
+}
+//Return is mandatory for a independt function in Zoho CRM 
+return "Done";
