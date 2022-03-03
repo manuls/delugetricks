@@ -5,7 +5,6 @@ In this repository I want to store small lines of code that are helpful.
 List of tricks
 
 * [connect_analytics.dg](../main/connect_analytics.dg): get data from a report of Zoho Analytics
-* [I'm a relative reference to a repository file](../blob/master/LICENSE)
-* getRecordsCView.dg: list records from a custom view in Zoho CRM 
+* [getRecordsCView.dg](../main/getRecordsCView.dg): list records from a custom view in Zoho CRM 
 
 
