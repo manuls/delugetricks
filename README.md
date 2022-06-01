@@ -6,5 +6,5 @@ List of tricks
 
 * [connect_analytics.dg](../main/connect_analytics.dg): get data from a report of Zoho Analytics
 * [getRecordsCView.dg](../main/getRecordsCView.dg): list records from a custom view in Zoho CRM 
-
+* [StockInHandAnalytics.sql](../main/StockInHandAnalytics.sql): SQL code to create a report to view the same stock in hand data that appears in Zoho Books (code provided by Zoho, not tested) 
 
