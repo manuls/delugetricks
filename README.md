@@ -1,4 +1,4 @@
-# Zoho Deluge Tricks ![alt text]([http://url/to/img.png](https://help.zoho.com/portal/api/departments/4000609360326/logo?portalId=edbsn3b70dd1c6df566ee5b86f9a10b39ac781e714edb9c3a38a191adf0c5b716166e))
+# Zoho Deluge Tricks ![alt text](https://www.lenda.net/wp-content/uploads/2022/06/logo-deluge.png)
 Working with Zoho Deluge can be really tricky for some operations that are not documented in their documentations. 
 In this repository I want to store small lines of code that can be helpful from day to day.
 
