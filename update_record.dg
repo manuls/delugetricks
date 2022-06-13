@@ -1,0 +1,18 @@
+/* 
+Code to update a row in a Zoho Creator Report
+
+Maybe there is a better way, but this is the way that worked for me
+
+You have to create a Workflow in the form to Validations on form submission 
+
+*/ 
+
+//First We search in the report for the entry we want to update with the search
+//for the fields
+searchInReport = Name_Report[Field == Search];
+//We check if the search threw some results
+if(searchInReport.count() > 0)
+{
+  //We delete the previous entry to "make room" for the new
+	delete from searchInReport[Criteria == Search]
+}
