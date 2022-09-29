@@ -15,7 +15,6 @@ contact = customer.get("contact");
 //para añadir el producto
 tagID = "xxxx";
 //El ID del artículo a añadir 
-//En Dev está el Aceite de Atún 250ml
 itemAddID = "xxxx";
 //Comprobamos si está en el CRM para recuperar las etiquetas
 if(contact.get("is_crm_customer") = true && contact.get("is_linked_with_zohocrm") = true)
