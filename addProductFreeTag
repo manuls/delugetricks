@@ -1,0 +1,96 @@
+
+/* Función que comprueba en CRM si el contacto 
+tiene una etiqueta definida y le añade un producto
+a modo de promoción 
+(c) Manu Quiroga - 28/09/22
+*/
+//Datos Rutinarios para la información
+organizationID = organization.get("organization_id");
+salesorderID = salesorder.get("salesorder_id");
+listItems = salesorder.get("line_items");
+custID = salesorder.get("customer_id");
+customer = zoho.books.getRecordsByID("Contacts",organizationID,custID);
+contact = customer.get("contact");
+//El ID de la etiqueta que hay que buscar
+//para añadir el producto
+tagID = "xxxx";
+//El ID del artículo a añadir 
+//En Dev está el Aceite de Atún 250ml
+itemAddID = "xxxx";
+//Comprobamos si está en el CRM para recuperar las etiquetas
+if(contact.get("is_crm_customer") = true && contact.get("is_linked_with_zohocrm") = true)
+{
+	info "> Está en el CRM";
+	contactCRM_ID = contact.get("zcrm_contact_id");
+	//Comprobamos si tiene contacto en el CRM registrado en Books
+	if(contactCRM_ID.isEmpty() == false)
+	{
+		infoCRM = zoho.crm.getRecordById("Contacts",contactCRM_ID,"crmbooks");
+		info "Tiene dato de contacto en el CRM";
+		//Buscamos la etiqueta objetivo en el JSON en el contacto registrado del CRM
+		listaTags = List();
+		getTags = infoCRM.getJSON("Tag");
+		for each  tag in getTags
+		{
+			listaTags.add(tag.getJSON("id"));
+		}
+	}
+	//Si no tiene contacto en el CRM registrado en Books
+	//Buscamos los registros relacionados en CRM
+	else
+	{
+		accountCRM_ID = contact.get("zcrm_account_id");
+		relatedRecord = zoho.crm.getRelatedRecords("contacts","accounts",accountCRM_ID);
+		if(relatedRecord.size() > 0)
+		{
+			info "Tiene relatedRecord";
+			listaTags = List();
+			for each  related in relatedRecord
+			{
+				getTags = related.getJSON("Tag");
+				//Buscamos la etiqueta objetivo en el JSON de cada registro relacionado de CRM
+				for each  tag in getTags
+				{
+					listaTags.add(tag.getJSON("id"));
+				}
+			}
+		}
+	}
+	//Buscamos la etiqueta objetivo
+	//y rehacemos la orden de venta con el artículo nuevo
+	if(listaTags.contains(tagID) = true)
+	{
+		info "> He encontrado la etiqueta buena";
+		info listaTags.contains(tagID);
+		lineList = List();
+		pedido = Map();
+		for each  item in listItems
+		{
+			listItem = Map();
+			itemID = item.get("item_id");
+			listItem.put("item_id",itemID);
+			quantity = item.get("quantity");
+			listItem.put("quantity",quantity);
+			discount = item.get("discount");
+			listItem.put("discount",discount);
+			subtotal = item.get("item_sub_total");
+			listItem.put("subtotal",subtotal);
+			warehouse_id = item.get("warehouse_id");
+			listItem.put("warehouse_id",warehouse_id);
+			tax_id = item.get("tax_id");
+			listItem.put("tax_id",tax_id);
+			lineList.add(listItem);
+		}
+		//Preparamos el nuevo producto
+		//Con descuento = 100% porque es un regalo
+		nuevoProducto = Map();
+		nuevoProducto.put("item_id",itemAddID);
+		nuevoProducto.put("quantity","1");
+		nuevoProducto.put("discount","100%");
+		lineList.add(nuevoProducto);
+		pedido.put("line_items",lineList);
+		//Actualizamos la Orden de Venta
+		actualiza = zoho.books.updateRecord("salesorders",organizationID,salesorderID,pedido);
+		info actualiza.get("message");
+	}
+}
