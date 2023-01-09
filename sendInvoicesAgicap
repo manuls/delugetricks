@@ -1,0 +1,87 @@
+
+/*
+/////////////////////////////
+- Nombre: sendInvoicesagicap
+- Desc: Función que envía diariamente las facturas a Agicap
+- Autor: Manu Quiroga (@Manuls)
+- Última actualización: 06/01/22
+/////////////////////////////
+accountID d5cxxx
+token xxx
+companyId 3xxxx
+*/
+organizationID = organization.get("organization_id");
+///Agicap Data
+accountID = "xxxxx";
+token = "Bearer xxxxx;
+companyId = "xxxxx";
+urlbase = "https://openapi.agicap.com/api/accounts/" + accountID + "/expectedtransactions/batch";
+headersAgicap = Map();
+headersAgicap.put("Authorization",token);
+headersAgicap.put("content-type","application/json");
+headersAgicap.put("CompanyId",companyId);
+//Fin Datos Agicap
+page = {1,2,3,4,5,6,7,8,9,10};
+more_pages = true;
+fecha_inicio = today.toString("YYYY-MM-dd");
+for each  p in page
+{
+	if(more_pages = true)
+	{
+		contador = 0;
+		urllista = "https://books.zoho.eu/api/v3/invoices/?organization_id=" + organizationID + "&date=" + fecha_inicio + "&page=" + p + "&per_page=100";
+		lista = invokeurl
+		[
+			url :urllista
+			type :GET
+			connection:"xxxxx"
+		];
+		mas_paginas = lista.get("page_context").get("has_more_page");
+		if(mas_paginas != true)
+		{
+			more_pages = false;
+		}
+		lista_invoices = lista.get("invoices").toList();
+		//info lista_invoices;
+		listParam = List();
+		for each  inv in lista_invoices
+		{
+			if(inv.get("branch_id") == "81921000004302039" && inv.get("custom_field_hash").get("cf_familia") == "Pedidos")
+			{
+				factura = Map();
+				invNumber = inv.get("invoice_number");
+				fechainv = inv.get("date");
+				fechainv = fechainv.toString("YYYY-MM-dd'T'HH:mm:ss");
+				fechadue = inv.get("due_date");
+				fechadue = fechadue.toString("YYYY-MM-dd'T'HH:mm:ss");
+				total = inv.get("total");
+				factura.put("amount",total);
+				factura.put("billingDate",fechainv);
+				factura.put("isCashInflow",true);
+				factura.put("name",invNumber);
+				factura.put("paymentDate",fechadue);
+				factura.put("externalReference","zohobooks");
+				listParam.add(factura);
+			}
+		}
+		// Así hay que crear el Array para que la API lo admita
+		myMap = "[" + listParam + "]";
+		//info myMap; 
+		callAgicap = invokeurl
+		[
+			url :urlbase
+			type :POST
+			parameters:myMap
+			headers:headersAgicap
+			content-type:"application/json"
+		];
+		info callAgicap;
+		sendmail
+		[
+			from :zoho.adminuserid
+			to :"manu@lenda.net"
+			subject :"Debug Agicap " + today
+			message :callAgicap
+		]
+	}
+}
