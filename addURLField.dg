@@ -1,0 +1,12 @@
+void creator_integration()
+{
+	optional =Map();
+	datamap = Map();
+	URLmap = Map();
+	URLmap.put("value", "Zylker");
+	URLmap.put("url","www.zylker.com");
+	URLmap.put("title", "Zylker - Title");
+	datamap.put("URL_Field",URLmap);
+	response = zoho.creator.createRecord("owner", "app", "form", datamap, optional, "creator_connection");
+	info response ;
+}
