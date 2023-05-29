@@ -8,4 +8,5 @@ List of tricks
 * [getRecordsCView.dg](../main/getRecordsCView.dg): list records from a custom view in Zoho CRM 
 * [StockInHandAnalytics.sql](../main/StockInHandAnalytics.sql): SQL code to create a report to view the same stock in hand data that appears in Zoho Books (code provided by Zoho, not tested) 
 * [update_record.dg](../main/update_record.dg): Deluge Script to update a row in Zoho Creator
+* [wait.dg](../main/wait.dg): Deluge Script adapted for Zoho Creator that creates a pause in the execution. Credits to julien from Zoho Community: https://help.zoho.com/portal/en/community/user/4006985205586
 
