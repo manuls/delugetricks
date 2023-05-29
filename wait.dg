@@ -1,0 +1,56 @@
+bool wait(int waitTimeInSeconds)
+{
+	try 
+	{
+		// Current datetime in text format, as it seems that date variables appear empty in the "catch" block
+		startDateTimeTxt = now.toText("yyyy-MM-ddZHH:mm:ss");
+		// Call the external sleep service
+		sleep = invokeurl
+		[
+			url :"https://httpstat.us/200?sleep=" + waitTimeInSeconds * 1000
+			type :GET
+			detailed:true
+		];
+		if(!sleep.get("responseCode").startsWith("2"))
+		{
+			// If the url call does not return a code 200, creation of an error to trigger the catch
+			info null.toNumber();
+		}
+	}
+	catch (err)
+	{
+		// In case of a failure of invoke url, we calculate the elapsed time between the beginning of the function and now
+		endDateTime = now;
+		startDateTime = startDateTimeTxt.toDateTime("yyyy-MM-ddZHH:mm:ss");
+		// elapsedTime has a format of HH:mm:ss or mm:ss of ss, we convert it into a number of seconds
+		elapsedTime = startDateTime.timeBetween(endDateTime);
+		elapsedTimeInSeconds = 0;
+		elapsedTimeArray = elapsedTime.toList(":");
+		for each index i in elapsedTimeArray
+		{
+			position = elapsedTimeArray.size() - i - 1;
+			if(i == 0)
+			{
+				// secondes
+				elapsedTimeInSeconds = elapsedTimeInSeconds + elapsedTimeArray.get(position).toNumber();
+			}
+			if(i == 1)
+			{
+				// minutes
+				elapsedTimeInSeconds = elapsedTimeInSeconds + elapsedTimeArray.get(position).toNumber() * 60;
+			}
+			if(i == 2)
+			{
+				// hours
+				elapsedTimeInSeconds = elapsedTimeInSeconds + elapsedTimeArray.get(position).toNumber() * 3600;
+			}
+		}
+		// If there is still some time to wait, recursive call of the function with the new wait time
+		newWaitTimeInSeconds = waitTimeInSeconds - elapsedTimeInSeconds;
+		if(newWaitTimeInSeconds > 0)
+		{
+			thisapp.wait(newWaitTimeInSeconds);
+		}
+	}
+	return true;
+}
