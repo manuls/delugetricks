@@ -1,5 +1,5 @@
 /* Function that checks if the geolocation
-of visits to Accounts is correct
+of visits to Zoho CRM Accounts is correct
 within some distance parameters
 By default, Google Maps calculates driving distances
 Documentation Distance Matrix Module: https://developers.google.com/maps/documentation/distance-matrix/distance-matrix
@@ -10,7 +10,7 @@ Last Update: 25/10/23
 
 apikey_google = "xxxx";
 //Distance Limit in meters
-limitDistance = 500;
+limitDistance = 2000;
 //idMeeting is an argument in the workflow function
 getMeeting = zoho.crm.getRecordById("Events",idMeeting);
 mensajeemail = "";
@@ -34,7 +34,7 @@ if(getMeeting.getJSON("Check_In_Status") == "VISITED")
 	}
 	if(getMeeting.getJSON("$se_module") == "Leads")
 	{
-    //Custom inputs in Leads
+   	 //Custom inputs in Leads
 		getAcc = zoho.crm.getRecordById("Leads",relAcc);
 		street = getAcc.get("Calle_Facturacion");
 		city = getAcc.get("Ciudad_Facturacion");
@@ -69,7 +69,8 @@ if(getMeeting.getJSON("Check_In_Status") == "VISITED")
 		address = address.remove("\"");
 		destAddr = address;
 		/* End Normalization */
-    // URL Google Maps Distance Matrix
+   		 // URL Google Maps Distance Matrix
+		//By default is driving distance
 		urlG = "https://maps.googleapis.com/maps/api/distancematrix/json?units=metric&origins=" + checkinAddr + "&destinations=" + destAddr + "&mode=driving&key=" + apikey_google;
 		DistanceResult = invokeurl
 		[
@@ -95,7 +96,7 @@ if(getMeeting.getJSON("Check_In_Status") == "VISITED")
 					subject :"❌📍 Bad Geolocation - " + nameAcc
 					message :mensajeemail
 				]
-				//We can update custom data in Events here
+				//We can update Event with custom data or even push it to a Zoho Analytics report
 				
 			}
 			else
