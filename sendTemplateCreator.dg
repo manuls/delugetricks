@@ -1,0 +1,17 @@
+/* This simply code sends by email
+a record template PDF of a created record */
+
+void sendRecordTemplate()
+{
+  getID = Report[Criteria = "Search Criteria"].ID;
+	sendmail
+	[
+		from :zoho.adminuiserid
+		to :"customer@github.com"
+		subject :"The Subjet"
+		message :"<p>The Email Body</p>"
+		Attachments :template:link_template_name:Report getID as PDF
+	]
+  //Attachments Example
+	//template: <record_template1>: <form_link_name1> <record_id_variable1> as <attachment_format>
+}
