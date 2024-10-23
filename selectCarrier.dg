@@ -1,0 +1,248 @@
+
+/* Función para actualizar automáticamente
+el transportista en los paquetes
+según tarifas almacenadas en Zoho Analytics
+
+Last Update: 10/2/24
+*/
+//Clientes con excepciones
+soloRedur = {"81921000000511667","81921000000496421","81921000175886091","81921000162294886","81921000000517849","81921000100433938","81921000000482209","81921000002999633","81921000000484783","81921000001244469","81921000000499875","81921000079803877"};
+soloDascher = {"81921000015123608","81921000000484871","81921000000492043","81921000005576031","81921000143937185","81921000000514857","81921000000484915","81921000000519147","81921000072392665","81921000209341099","81921000003028655"};
+customF = salesorder.getJSON("custom_fields").toList();
+for each  c in customF
+{
+	if(c.get("api_name") = "cf_pedido_web")
+	{
+		pedidoWeb = c.get("value");
+	}
+	if(c.get("api_name") = "cf_pedido_amazon")
+	{
+		pedidoAmazon = c.get("value");
+	}
+}
+//Se añade que el sistema no funcione, por el momento, en Segovia 
+//porque desde allí no se envía con REDUR
+if((salesorder.get("status") == "shipped" || salesorder.get("status") == "partially_shipped") && pedidoWeb = false && pedidoAmazon = false && salesorder.get("warehouse_id") != "81921000000254015")
+{
+	if(!soloRedur.contains(salesorder.get("customer_id")) && !soloDascher.contains(salesorder.get("customer_id")))
+	{
+		info "Cliente normal";
+		organizationID = organization.get("organization_id");
+		getPkg = salesorder.getJSON("packages");
+		salesNumber = salesorder.get("salesorder_number");
+		salesID = salesorder.get("salesorder_id");
+		pedidoWeb = false;
+		infoSO = zoho.inventory.getRecordsByID("salesorders",organizationID,salesID);
+		getPackages = infoSO.getJSON("salesorder").get("packages");
+		listCustom = infoSO.get("salesorder").getJSON("custom_field_hash");
+		//Detección temporal del almacén de Segovia que no podía tener 
+		//activado todavía
+		//Se desactiva el 19/2 por indicación de Suso
+		/*esSegovia = false;
+		for each  c in listCustom
+		{
+			if(c == "Lenda Pet Food Logística")
+			{
+				esSegovia = true;
+			}
+		} */
+		for each  pkg in getPackages
+		{
+			finalTotalWeight = 0;
+			totalWeight = 0;
+			if(pkg.get("status") == "shipped")
+			{
+				pkgID = pkg.get("package_id");
+				shipID = pkg.get("shipment_id");
+				getInfoPkg = zoho.inventory.getRecordsByID("packages",organizationID,pkgID).get("package");
+				lineItems = getInfoPkg.get("line_items");
+				for each  lineItem in lineItems
+				{
+					qty = lineItem.get("quantity").toDecimal();
+					itemID = lineItem.get("item_id");
+					item = zoho.inventory.getRecordsByID("Items",organizationID,itemID).get("item");
+					packingDetails = item.getJSON("package_details");
+					weight = packingDetails.get("weight");
+					if(weight.isNull() = true)
+					{
+						info "No me gusta porque es Null";
+					}
+					else
+					{
+						weight = weight.toDecimal();
+						totalWeight = weight * qty;
+					}
+					finalTotalWeight = finalTotalWeight + totalWeight;
+				}
+				finalTotalWeight = finalTotalWeight.toNumber();
+				shipAddr = salesorder.getJSON("shipping_address").get("zip");
+				city = salesorder.getJSON("shipping_address").get("state");
+				shipAddr = shipAddr.trim();
+				zipCode = shipAddr.subString(0,2);
+				country = salesorder.getJSON("shipping_address").get("country");
+				//Parámetros para Zoho Analytics
+				//Descontinuados en 2024
+				/*
+				organizationID_Ana = "20067570485";
+				oldTransp = pkg.get("carrier");
+				headersMap = Map();
+				headersMap.put("ZANALYTICS-ORGID",organizationID_Ana);
+				config = Map();
+				config.put("responseFormat","json");
+				config.put("criteria","\"Peso\" >= '" + finalTotalWeight + "'");
+				paramsMap = Map();
+				paramsMap.put("CONFIG",config.toString());
+				viewSpain = "64822000010021091";
+				viewPortugal = "64822000010218020";
+				viewCountry = true;
+				if(country == "Spain" || country == "España" || country == "Espana")
+				{
+					viewCountry = viewSpain;
+				}
+				else if(country = "Portugal")
+				{
+					viewCountry = viewPortugal;
+				}
+				else
+				{
+					info "Error, no hay tarifas para la dirección de envío. No cambiamos transportista";
+					viewCountry = false;
+				} */
+				//Selección de transportista con tarifas almacenadas en Zoho Analytics
+				//Descontinuado en 2024
+				/*
+				if(viewCountry != false && oldTransp != "Entrega en mano" && oldTransp != "Palletways" && oldTransp != "otros" && oldTransp != "JASDE")
+				{
+					info "Inicio selección de transportista";
+					getInfoAna = invokeurl
+					[
+						url :"https://analyticsapi.zoho.eu/restapi/v2/workspaces/64822000000008001/views/" + viewCountry + "/data"
+						type :GET
+						parameters:paramsMap
+						headers:headersMap
+						connection:"analytics_carrier"
+					];
+					empList = getInfoAna.get("data");
+					for each  r in empList
+					{
+						info r;
+						transp = r.getJSON(zipCode);
+						break;
+					}
+					info "Transportista que viene de Analytics: " + transp;
+					///// Actualizamos el paquete
+					info "Información paquete";
+					info pkg;
+					info "----";
+					shipmentID = pkg.get("shipment_id");
+					pkgID = pkg.get("package_id");
+					data = Map();
+					newShipm = Map();
+					newShipm.put("delivery_method",transp);
+					data.put("JSONString",newShipm);
+					info "#" + salesorder.get("salesorder_number");
+					info "CP: " + shipAddr;
+					info "Peso: " + finalTotalWeight;
+					info "Transportista antiguo: " + oldTransp;
+					info "Transportista escogido: " + transp;
+					info "------";
+					//Actualización de shipmentorder
+					urlBien = "https://www.zohoapis.eu/inventory/v1/shipmentorders/" + shipmentID + "?package_ids=" + pkgID + "&salesorder_id=" + salesID + "&organization_id=" + organizationID;
+					updateData = invokeurl
+					[
+						url :urlBien
+						type :PUT
+						parameters:data
+						connection:"inventoryshipments"
+					];
+					if(oldTransp != transp)
+					{
+						info "Actualizado transportista en paquete";
+						/*actualiza = Map();
+						actualiza.put("Orden de Venta",salesNumber);
+						actualiza.put("Peso",finalTotalWeight);
+						actualiza.put("Transportista Antiguo",oldTransp);
+						actualiza.put("Transportista Nuevo",transp);
+						actualiza.put("Provincia",city);
+						insertAnalytics = zoho.reports.createRow("Informes Ventas","Seguimiento Seleccionar Transportista",actualiza);
+					}
+					else
+					{
+						info "No enviamos a Analytics porque es el mismo transportista";
+					}
+				} 
+				else
+				{
+					info "No cambio transportista";
+					info "#" + salesorder.get("salesorder_number");
+					info "CP: " + shipAddr;
+					info "Peso: " + finalTotalWeight;
+					info "Transportista escogido: " + oldTransp;
+					info "Transportista designado: " + transp;
+					info "------";
+				} */
+			}
+		}
+	}
+	else
+	{
+		salesID = salesorder.getJSON("salesorder_id");
+		info salesID;
+		infosales = zoho.inventory.getRecordsByID("salesorders",organizationID,salesID);
+		info "Info so";
+		info infosales;
+		getPackages = infoSO.getJSON("salesorder").get("packages");
+		for each  pkg in getPackages
+		{
+			if(pkg.get("status") == "shipped" && pkg.get("shipment_date").toDate() = today)
+			{
+				pkgID = pkg.get("package_id");
+				shipID = pkg.get("shipment_id");
+				shipmentID = pkg.get("shipment_id");
+				pkgID = pkg.get("package_id");
+				oldTransp = pkg.get("carrier");
+				data = Map();
+				newShipm = Map();
+				custID = salesorder.get("customer_id");
+				if(soloRedur.contains(custID))
+				{
+					transp = "REDUR";
+				}
+				else if(soloDascher.contains(custID))
+				{
+					transp = "DACHSER";
+				}
+				else
+				{
+					transp = oldTransp;
+				}
+				newShipm.put("delivery_method",transp);
+				data.put("JSONString",newShipm);
+				info "#" + salesorder.get("salesorder_number");
+				info "CP: " + shipAddr;
+				info "Peso: " + finalTotalWeight;
+				info "Transportista seleccionado: " + oldTransp;
+				info "Transportista designado: " + transp;
+				info "------";
+				if(oldTransp != transp)
+				{
+					actualiza = Map();
+					actualiza.put("Orden de Venta",salesNumber);
+					actualiza.put("Peso",finalTotalWeight);
+					actualiza.put("Transportista Antiguo",oldTransp);
+					actualiza.put("Transportista Nuevo",transp);
+					actualiza.put("Provincia",city);
+					insertAnalytics = zoho.reports.createRow("Informes Ventas","Seguimiento Seleccionar Transportista",actualiza);
+				}
+				else
+				{
+					info "No enviamos a Analytics porque es el mismo transportista";
+				}
+			}
+		}
+	}
+}
+else
+{
+	info "No he hecho nada porque no cumplía las condiciones";
+}
